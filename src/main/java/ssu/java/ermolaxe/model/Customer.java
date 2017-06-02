@@ -1,6 +1,7 @@
 package ssu.java.ermolaxe.model;
 
 import javax.persistence.*;
+import java.util.List;
 
 /**
  * Created by Александр on 02.06.2017.
@@ -14,10 +15,10 @@ public class Customer {
     @Column(name = "CUSTOMER_ID")
     private long id;
 
-    @Column(name = "LOGIN")
+    @Column(name = "LOGIN", nullable = false, unique = true)
     private String login;
 
-    @Column(name = "PASSWORD")
+    @Column(name = "PASSWORD", nullable = false)
     private String password;
 
     public Customer() {

@@ -5,8 +5,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import ssu.java.ermolaxe.model.Customer;
 import ssu.java.ermolaxe.service.CustomerService;
+import ssu.java.ermolaxe.service.ItemService;
 
 @Controller
 public class WebController {
@@ -14,11 +14,19 @@ public class WebController {
     @Autowired
     private CustomerService customerService;
 
-    @RequestMapping(value = "/info", method = RequestMethod.GET)
+    @Autowired
+    private ItemService itemService;
+
+    @RequestMapping(value = "/customers", method = RequestMethod.GET)
     public String customers(Model model) {
-//        customerService.save(new Customer("Armen", "qwerty"));
         model.addAttribute("customers", customerService.getAllCustomers());
-        return "/info";
+        return "customers";
+    }
+
+    @RequestMapping(value = "/items", method = RequestMethod.GET)
+    public String items(Model model) {
+        model.addAttribute("items", itemService.getAllItems());
+        return "items";
     }
 
 }
