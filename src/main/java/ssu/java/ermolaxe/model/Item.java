@@ -37,6 +37,15 @@ public class Item {
     public Item() {
     }
 
+    public Item(String name, int price, String description, Customer seller, Customer buyer, Boolean sold) {
+        this.name = name;
+        this.price = price;
+        this.description = description;
+        this.seller = seller;
+        this.buyer = buyer;
+        this.sold = sold;
+    }
+
     public long getId() {
         return id;
     }

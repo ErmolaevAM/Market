@@ -21,11 +21,15 @@ public class CustomerServiceImpl implements CustomerService {
     private BCryptPasswordEncoder bCryptPasswordEncoder;
 
     public void save(Customer customer) {
-        customer.setPassword(bCryptPasswordEncoder.encode(customer.getPassword()));
+//        customer.setPassword(bCryptPasswordEncoder.encode(customer.getPassword()));
         customerRepository.save(customer);
     }
 
     public List<Customer> getAllCustomers() {
         return customerRepository.findAll();
+    }
+
+    public Customer getCustomerByLogin(String username) {
+        return customerRepository.findByLogin(username);
     }
 }

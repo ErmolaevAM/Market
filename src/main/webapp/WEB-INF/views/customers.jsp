@@ -9,6 +9,7 @@
 <div>
 
     <h1>Hello world</h1>
+    <a href="/items">Goto items</a>
 
     <table>
         <tr>

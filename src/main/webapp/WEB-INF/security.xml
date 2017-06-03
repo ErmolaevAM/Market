@@ -8,23 +8,43 @@ http://www.springframework.org/schema/security
 http://www.springframework.org/schema/security/spring-security.xsd">
 
     <http auto-config="true">
-        <intercept-url pattern="/" access="hasAnyRole('ROLE_USER', 'ROLE_ADMIN')"/>
 
-        <form-login login-page="/login" default-target-url="/welcome" authentication-failure-url="/login?error"
-                    username-parameter="login" password-parameter="password"/>
+        <intercept-url pattern="/WEB-INF/views/login.jsp" access="hasRole('IS_AUTHENTICATED_ANONYMOUSLY')"/>
+        <intercept-url pattern="/WEB-INF/views/customers.jsp" access="hasRole('ROLE_USER')"/>
+
+        <form-login login-page="/login.jsp"
+                    default-target-url="/customers"
+                    login-processing-url="/j_spring_security_check"
+                    authentication-failure-url="/login"
+                    username-parameter="j_username"
+                    password-parameter="j_password"/>
 
         <logout logout-success-url="/login?logout"/>
-
+        <csrf/>
     </http>
 
     <!--<authentication-manager alias="authenticationManager">
         <authentication-provider user-service-ref="userDetailsServiceImpl">
-            <password-encoder ref="encoder"></password-encoder>
+            <password-encoder ref="bCryptPasswordEncoder"></password-encoder>
+
+            <jdbc-user-service data-source-ref="dataSource"
+                               users-by-username-query="select login,password from customer where login=?"
+                               authorities-by-username-query="select role from customer where login=?"/>
+
+        </authentication-provider>
+    </authentication-manager>-->
+
+
+    <authentication-manager>
+        <authentication-provider>
+            <user-service>
+                <user name="ermolaxe" password="ermolaxe" authorities="ROLE_USER, ROLE_ADMIN" />
+            </user-service>
         </authentication-provider>
     </authentication-manager>
 
-    <beans:bean id="userDetailsServiceImpl" class="com.webmarket.service.UserDetailsServiceImpl">
-    </beans:bean>-->
+    <beans:bean id="userDetailsServiceImpl" class="ssu.java.ermolaxe.service.CustomerDetailsServiceImpl">
+    </beans:bean>
 
     <beans:bean id="bCryptPasswordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder">
         <beans:constructor-arg name="strength" value="11"/>

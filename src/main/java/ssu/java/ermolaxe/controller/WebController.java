@@ -5,11 +5,21 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import ssu.java.ermolaxe.model.Customer;
+import ssu.java.ermolaxe.model.Item;
 import ssu.java.ermolaxe.service.CustomerService;
 import ssu.java.ermolaxe.service.ItemService;
 
+import javax.servlet.http.HttpServletRequest;
+import java.util.logging.Logger;
+
 @Controller
 public class WebController {
+
+    private static final Logger logger = Logger.getLogger(WebController.class.toString());
+
+    private String username;
+    private String password;
 
     @Autowired
     private CustomerService customerService;
@@ -17,16 +27,137 @@ public class WebController {
     @Autowired
     private ItemService itemService;
 
+//    @Autowired
+//    private BCryptPasswordEncoder bCryptPasswordEncoder;
+
     @RequestMapping(value = "/customers", method = RequestMethod.GET)
     public String customers(Model model) {
-        model.addAttribute("customers", customerService.getAllCustomers());
-        return "customers";
+        if (username!= null && customerService.getCustomerByLogin(username).getEnable()){
+            model.addAttribute("customers", customerService.getAllCustomers());
+            return "customers";
+        } else {
+            return "redirect:login";
+        }
     }
 
     @RequestMapping(value = "/items", method = RequestMethod.GET)
     public String items(Model model) {
         model.addAttribute("items", itemService.getAllItems());
         return "items";
+    }
+
+
+    @RequestMapping(value = {"/login", "/loginfailed"}, method = RequestMethod.GET)
+    public String login() {
+        return "login";
+    }
+
+    @RequestMapping(value = {"/login"}, method = RequestMethod.POST)
+    public String login(HttpServletRequest request) {
+        username = request.getParameter("j_username");
+        password = request.getParameter("j_password");
+
+        Customer customer = customerService.getCustomerByLogin(username);
+        if (customer!=null && customer.getPassword().equals(password)) {
+            customer.setEnable(true);
+            customerService.save(customer);
+            return "redirect:allitems";
+        } else {
+            return "login";
+        }
+    }
+
+
+    @RequestMapping(value = {"/myitems"}, method = RequestMethod.GET)
+    public String myItems(Model model){
+        if (username!= null && customerService.getCustomerByLogin(username).getEnable()){
+            model.addAttribute("myitems", itemService.getBySeller(customerService.getCustomerByLogin(username)));
+            return "myitems";
+        } else {
+            return "redirect:login";
+        }
+    }
+
+
+    @RequestMapping(value = {"/allitems"}, method = RequestMethod.GET)
+    public String allItems(Model model){
+        if (username!= null && customerService.getCustomerByLogin(username).getEnable()){
+            model.addAttribute("allitems", itemService.getAllItems());
+            return "allitems";
+        } else {
+            return "redirect:login";
+        }
+    }
+
+
+    @RequestMapping(value = {"/cart"}, method = RequestMethod.GET)
+    public String cart(Model model){
+        if (username!= null && customerService.getCustomerByLogin(username).getEnable()){
+            model.addAttribute("cartitems", itemService.getByBuyer(customerService.getCustomerByLogin(username)));
+            return "cart";
+        } else {
+            return "redirect:login";
+        }
+    }
+
+
+    @RequestMapping(value = {"/logout"}, method = RequestMethod.GET)
+    public String logout(Model model){
+        if (username!= null && customerService.getCustomerByLogin(username).getEnable()){
+            Customer cust = customerService.getCustomerByLogin(username);
+            cust.setEnable(false);
+            customerService.save(cust);
+            username = null;
+            password = null;
+            return "login";
+        } else {
+            return "redirect:login";
+        }
+    }
+
+
+    @RequestMapping(value = "/registration", method = RequestMethod.GET)
+    public String registration(Model model) {
+        return "registration";
+    }
+
+    @RequestMapping(value = "/registration", method = RequestMethod.POST)
+    public String registration(HttpServletRequest request) {
+        String name = request.getParameter("j_username");
+        String newpassword = request.getParameter("j_password");
+        String confirm = request.getParameter("j_confirm_password");
+        if(newpassword.equals(confirm)){
+            Customer cust = new Customer(name, newpassword);
+            cust.setEnable(false);
+            customerService.save(cust);
+            return "redirect:login";
+        }
+        else {
+            return "redirect:registration";
+        }
+    }
+
+
+    @RequestMapping(value = "/additem", method = RequestMethod.GET)
+    public String additem() {
+        return "additem";
+    }
+
+    @RequestMapping(value = "/additem", method = RequestMethod.POST)
+    public String additem(HttpServletRequest request) {
+        if(username!=null && customerService.getCustomerByLogin(username).getEnable()) {
+            String title = request.getParameter("j_title");
+            String desc = request.getParameter("j_description");
+            Integer price = Integer.parseInt(request.getParameter("j_price"));
+
+            if (price >= 0) {
+                Item item = new Item(title, price, desc, customerService.getCustomerByLogin(username), null, false);
+                itemService.save(item);
+                return "redirect:myitems";
+            } else {
+                return "redirect:additem";
+            }
+        } else return "redirect:login";
     }
 
 }
