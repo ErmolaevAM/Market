@@ -15,5 +15,7 @@ public interface ItemService {
     List<Item> getBySeller(Customer customer);
     List<Item> getByBuyer(Customer customer);
 
+    List<Item> getAllItemsByNullBuyer();
+
     void buy(Customer customer, Item item);
 }

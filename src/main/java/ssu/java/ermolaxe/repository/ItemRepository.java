@@ -13,4 +13,6 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     List<Item> findBySeller(Customer customer);
     List<Item> findByBuyer(Customer customer);
+
+    List<Item> findByBuyerNull();
 }

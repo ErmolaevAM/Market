@@ -9,14 +9,16 @@ import ssu.java.ermolaxe.model.Customer;
 import ssu.java.ermolaxe.model.Item;
 import ssu.java.ermolaxe.service.CustomerService;
 import ssu.java.ermolaxe.service.ItemService;
+import org.slf4j.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.logging.Logger;
+import java.util.List;
+import java.util.logging.Level;
 
 @Controller
 public class WebController {
 
-    private static final Logger logger = Logger.getLogger(WebController.class.toString());
+    private static final Logger LOGGER = LoggerFactory.getLogger(WebController.class);
 
     private String username;
     private String password;
@@ -27,24 +29,8 @@ public class WebController {
     @Autowired
     private ItemService itemService;
 
-//    @Autowired
-//    private BCryptPasswordEncoder bCryptPasswordEncoder;
-
-    @RequestMapping(value = "/customers", method = RequestMethod.GET)
-    public String customers(Model model) {
-        if (username!= null && customerService.getCustomerByLogin(username).getEnable()){
-            model.addAttribute("customers", customerService.getAllCustomers());
-            return "customers";
-        } else {
-            return "redirect:login";
-        }
-    }
-
-    @RequestMapping(value = "/items", method = RequestMethod.GET)
-    public String items(Model model) {
-        model.addAttribute("items", itemService.getAllItems());
-        return "items";
-    }
+    /*@Autowired
+    private BCryptPasswordEncoder bCryptPasswordEncoder;*/
 
 
     @RequestMapping(value = {"/login", "/loginfailed"}, method = RequestMethod.GET)
@@ -58,12 +44,22 @@ public class WebController {
         password = request.getParameter("j_password");
 
         Customer customer = customerService.getCustomerByLogin(username);
+
         if (customer!=null && customer.getPassword().equals(password)) {
             customer.setEnable(true);
             customerService.save(customer);
+
+            StringBuilder msg = new StringBuilder();
+            msg.append("User with login [").append(username).append("] sign in.");
+            LOGGER.info(msg.toString(), Level.INFO);
+
             return "redirect:allitems";
         } else {
-            return "login";
+            StringBuilder msg = new StringBuilder();
+            msg.append("User with login [").append(username).append("] try to sign in, but something went wrong.");
+            LOGGER.warn(msg.toString(), Level.WARNING);
+
+            return "redirect:login";
         }
     }
 
@@ -72,6 +68,7 @@ public class WebController {
     public String myItems(Model model){
         if (username!= null && customerService.getCustomerByLogin(username).getEnable()){
             model.addAttribute("myitems", itemService.getBySeller(customerService.getCustomerByLogin(username)));
+            model.addAttribute("username", username);
             return "myitems";
         } else {
             return "redirect:login";
@@ -82,18 +79,43 @@ public class WebController {
     @RequestMapping(value = {"/allitems"}, method = RequestMethod.GET)
     public String allItems(Model model){
         if (username!= null && customerService.getCustomerByLogin(username).getEnable()){
-            model.addAttribute("allitems", itemService.getAllItems());
+            model.addAttribute("allitems", itemService.getAllItemsByNullBuyer());
+            model.addAttribute("username", username);
             return "allitems";
         } else {
             return "redirect:login";
         }
     }
 
+    @RequestMapping(value = "/allitems", method = RequestMethod.POST)
+    public String allItems(HttpServletRequest request) {
+        if (username!=null && customerService.getCustomerByLogin(username).getEnable()) {
+            String[] checkboxValues = request.getParameterValues("checkbox_id");
+            if (checkboxValues != null && checkboxValues.length>0) {
+                List<Item> allItems = itemService.getAllItems();
+                for (String elem : checkboxValues) {
+                    for (Item item : allItems) {
+                        if (elem.equals( String.valueOf(item.getId())) ) {
+                            item.setSold(true);
+                            item.setBuyer(customerService.getCustomerByLogin(username));
+                            itemService.save(item);
+
+                            StringBuilder msg = new StringBuilder();
+                            msg.append("User with login [").append(username).append("] bought item [").append(item.toString()).append("]");
+                            LOGGER.info(msg.toString(), Level.INFO);
+                        }
+                    }
+                }
+            }
+            return "redirect:allitems";
+        } else return "redirect:login";
+    }
 
     @RequestMapping(value = {"/cart"}, method = RequestMethod.GET)
     public String cart(Model model){
         if (username!= null && customerService.getCustomerByLogin(username).getEnable()){
             model.addAttribute("cartitems", itemService.getByBuyer(customerService.getCustomerByLogin(username)));
+            model.addAttribute("username", username);
             return "cart";
         } else {
             return "redirect:login";
@@ -109,7 +131,7 @@ public class WebController {
             customerService.save(cust);
             username = null;
             password = null;
-            return "login";
+            return "redirect:login";
         } else {
             return "redirect:login";
         }
@@ -153,6 +175,11 @@ public class WebController {
             if (price >= 0) {
                 Item item = new Item(title, price, desc, customerService.getCustomerByLogin(username), null, false);
                 itemService.save(item);
+
+                StringBuilder msg = new StringBuilder();
+                msg.append("User with login [").append(username).append("] add new items[").append(item.toString()).append("]");
+                LOGGER.info(msg.toString(), Level.INFO);
+
                 return "redirect:myitems";
             } else {
                 return "redirect:additem";

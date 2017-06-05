@@ -8,11 +8,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
-
     <title>My Items</title>
-
 </head>
-
 <body>
 <c:if test="${pageContext.request.userPrincipal.name != null}">
     <form id="logoutForm" method="POST" action="${contextPath}/logout">
@@ -22,12 +19,8 @@
             onclick="document.forms['logoutForm'].submit()">Logout</a>
     </h2>
 </c:if>
-
 <h1>My Items</h1>
-
 <div class="table-responsive">
-
-
     <table class="table">
         <tr>
             <th width="100">Title</th>
@@ -38,7 +31,6 @@
             <th width="170">Buy It Now</th>
             <th width="50">Bid Increment</th>
         </tr>
-
         <c:forEach items="${items}" var="item">
             <tr>
                 <td><c:out value="${item.title}"/></td>
@@ -52,8 +44,5 @@
         </c:forEach>
     </table>
 </div>
-
-
-
 </body>
 </html>
